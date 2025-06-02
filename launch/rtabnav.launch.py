@@ -31,6 +31,7 @@ def generate_launch_description():
     # Launch variables
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
+    use_rspub = LaunchConfiguration('use_rspub')
     use_simulator = LaunchConfiguration('use_simulator')
     use_sim_time = LaunchConfiguration('use_sim_time')
     params_file = LaunchConfiguration('params_file')
@@ -63,11 +64,6 @@ def generate_launch_description():
         description='Whether to apply a namespace to the navigation stack',
     )
 
-    declare_map_yaml_cmd = DeclareLaunchArgument(
-        'map',
-        default_value=os.path.join(package_dir, 'maps', 'tb3_sandbox.yaml'),
-    )
-
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='true',
@@ -90,6 +86,12 @@ def generate_launch_description():
         'use_simulator',
         default_value='True',
         description='Whether to start the simulator',
+    )
+
+    declare_use_rspub_cmd = DeclareLaunchArgument(
+        'use_rspub',
+        default_value='True',
+        description='Whether to start the robot state publisher',
     )
 
     declare_world_cmd = DeclareLaunchArgument(
@@ -133,7 +135,7 @@ def generate_launch_description():
 
     # Robot state publisher (only used in sim, otherwise expected to be provided by the robot)
     start_robot_state_publisher_cmd = Node(
-        condition=IfCondition(use_simulator),
+        condition=IfCondition(use_rspub),
         package='robot_state_publisher',
         executable='robot_state_publisher',
         name='robot_state_publisher',
@@ -235,7 +237,7 @@ def generate_launch_description():
     ld.add_action(stdout_linebuf_envvar)
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_use_namespace_cmd)
-    ld.add_action(declare_map_yaml_cmd)
+    ld.add_action(declare_use_rspub_cmd)
     ld.add_action(declare_use_simulator_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
