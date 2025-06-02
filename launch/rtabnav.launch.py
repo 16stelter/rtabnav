@@ -24,7 +24,7 @@ from launch_ros.actions import Node, PushROSNamespace
 
 def generate_launch_description():
     # Get directories
-    package_dir = get_package_share_directory('go2_nav')
+    package_dir = get_package_share_directory('rtabnav')
     launch_dir = os.path.join(package_dir, 'launch')
     sim_dir = get_package_share_directory('nav2_minimal_tb3_sim')
 

@@ -37,7 +37,7 @@ def generate_launch_description():
     lifecycle_nodes = ['map_saver']
 
     # Getting directories and launch-files
-    package_dir = get_package_share_directory('go2_nav')
+    package_dir = get_package_share_directory('rtabnav')
 
     # Create our own temporary YAML files that include substitutions
     configured_params = ParameterFile(
