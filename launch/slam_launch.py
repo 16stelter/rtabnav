@@ -31,8 +31,6 @@ def generate_launch_description():
     namespace = LaunchConfiguration('namespace')
     params_file = LaunchConfiguration('params_file')
     use_sim_time = LaunchConfiguration('use_sim_time')
-    autostart = LaunchConfiguration('autostart')
-    use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
 
     # Variables
@@ -40,8 +38,6 @@ def generate_launch_description():
 
     # Getting directories and launch-files
     package_dir = get_package_share_directory('go2_nav')
-    slam_toolbox_dir = get_package_share_directory('slam_toolbox')
-    slam_launch_file = os.path.join(slam_toolbox_dir, 'launch', 'online_sync_launch.py')
 
     # Create our own temporary YAML files that include substitutions
     configured_params = ParameterFile(
@@ -71,18 +67,6 @@ def generate_launch_description():
         description='Use simulation (Gazebo) clock if true',
     )
 
-    declare_autostart_cmd = DeclareLaunchArgument(
-        'autostart',
-        default_value='True',
-        description='Automatically startup the nav2 stack',
-    )
-
-    declare_use_respawn_cmd = DeclareLaunchArgument(
-        'use_respawn',
-        default_value='False',
-        description='Whether to respawn if a node crashes. Applied when composition is disabled.',
-    )
-
     declare_log_level_cmd = DeclareLaunchArgument(
         'log_level', default_value='info', description='log level'
     )
@@ -95,7 +79,7 @@ def generate_launch_description():
                 package='nav2_map_server',
                 executable='map_saver_server',
               output='screen',
-                respawn=use_respawn,
+                respawn=False,
                 respawn_delay=2.0,
                 arguments=['--ros-args', '--log-level', log_level],
                 parameters=[configured_params],
@@ -106,19 +90,12 @@ def generate_launch_description():
                 name='lifecycle_manager_slam',
                 output='screen',
                 arguments=['--ros-args', '--log-level', log_level],
-                parameters=[{'autostart': autostart}, {'node_names': lifecycle_nodes}],
+                parameters=[{'autostart': 'true'}, {'node_names': lifecycle_nodes}],
             ),
         ]
     )
 
-    # If the provided param file doesn't have slam_toolbox params, we must remove the 'params_file'
-    # LaunchConfiguration, or it will be passed automatically to slam_toolbox and will not load
-    # the default file
-    has_slam_toolbox_params = HasNodeParams(
-        source_file=params_file, node_name='slam_toolbox'
-    )
-
-    start_slam_toolbox_cmd = Node(
+    start_rtabmap_cmd = Node(
       package='rtabmap_slam', executable='rtabmap', output='screen',
       parameters=[params_file, {'use_sim_time': use_sim_time}],
       arguments=['--ros-args', '--log-level', log_level],
@@ -137,14 +114,12 @@ def generate_launch_description():
     ld.add_action(declare_namespace_cmd)
     ld.add_action(declare_params_file_cmd)
     ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_autostart_cmd)
-    ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
 
     # Running Map Saver Server
     ld.add_action(start_map_server)
 
     # Running SLAM Toolbox (Only one of them will be run)
-    ld.add_action(start_slam_toolbox_cmd)
+    ld.add_action(start_rtabmap_cmd)
 
     return ld
