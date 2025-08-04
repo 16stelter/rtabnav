@@ -5,11 +5,11 @@ amcl:
     alpha3: 0.2
     alpha4: 0.2
     alpha5: 0.2
-    base_frame_id: "base_footprint"
+    base_frame_id: "base_link"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
     beam_skip_threshold: 0.3
-    do_beamskip: false
+    do_beamskip: true
     global_frame_id: "map"
     lambda_short: 0.1
     laser_likelihood_max_dist: 2.0
@@ -25,7 +25,7 @@ amcl:
     recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
     resample_interval: 1
-    robot_model_type: "nav2_amcl::DifferentialMotionModel"
+    robot_model_type: "nav2_amcl::OmniMotionModel" #"nav2_amcl::DifferentialMotionModel"
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
@@ -70,7 +70,7 @@ controller_server:
     controller_frequency: 20.0
     costmap_update_timeout: 0.30
     min_x_velocity_threshold: 0.001
-    min_y_velocity_threshold: 0.5
+    min_y_velocity_threshold: 0.001
     min_theta_velocity_threshold: 0.001
     failure_tolerance: 0.3
     progress_checker_plugins: ["progress_checker"]
@@ -96,41 +96,37 @@ controller_server:
       yaw_goal_tolerance: 0.25
     FollowPath:
       plugin: "nav2_mppi_controller::MPPIController"
-      time_steps: 56
+      time_steps: 60
       model_dt: 0.05
       batch_size: 2000
-      ax_max: 3.0
-      ax_min: -3.0
-      ay_max: 3.0
-      az_max: 3.5
+      ax_max: 10.0
+      ax_min: -10.0
+      ay_max: 10.0
+      ay_min: -10.0
+      az_max: 10.0
       vx_std: 0.2
       vy_std: 0.2
-      wz_std: 0.4
-      vx_max: 0.5
-      vx_min: -0.35
-      vy_max: 0.5
-      wz_max: 1.9
+      wz_std: 0.2
+      vx_max: 2.0
+      vx_min: -2.0
+      vy_max: 2.0
+      vy_min: -2.0
+      wz_max: 2.0
       iteration_count: 1
       prune_distance: 1.7
       transform_tolerance: 0.1
       temperature: 0.3
       gamma: 0.015
-      motion_model: "DiffDrive"
+      motion_model: "Omni" #"DiffDrive"
       visualize: true
       regenerate_noises: true
       TrajectoryVisualizer:
         trajectory_step: 5
         time_step: 3
-      AckermannConstraints:
-        min_turning_r: 0.2
       critics: [
-        "ConstraintCritic", "CostCritic", "GoalCritic",
+        "CostCritic", "GoalCritic",
         "GoalAngleCritic", "PathAlignCritic", "PathFollowCritic",
         "PathAngleCritic", "PreferForwardCritic"]
-      ConstraintCritic:
-        enabled: true
-        cost_power: 1
-        cost_weight: 4.0
       GoalCritic:
         enabled: true
         cost_power: 1
@@ -144,22 +140,22 @@ controller_server:
       PreferForwardCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 5.0
+        cost_weight: 10.0
         threshold_to_consider: 0.5
       CostCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 3.81
+        cost_weight: 4.0
         near_collision_cost: 253
         critical_cost: 300.0
         consider_footprint: false
         collision_cost: 1000000.0
-        near_goal_distance: 1.0
+        near_goal_distance: 0.2
         trajectory_point_step: 2
       PathAlignCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 14.0
+        cost_weight: 3.0
         max_path_occupancy_ratio: 0.05
         trajectory_point_step: 4
         threshold_to_consider: 0.5
@@ -168,7 +164,7 @@ controller_server:
       PathFollowCritic:
         enabled: true
         cost_power: 1
-        cost_weight: 5.0
+        cost_weight: 10.0
         offset_from_furthest: 5
         threshold_to_consider: 1.4
       PathAngleCritic:
@@ -192,15 +188,15 @@ local_costmap:
       global_frame: odom
       robot_base_frame: base_link
       rolling_window: true
-      width: 3
-      height: 3
+      width: 7
+      height: 7
       resolution: 0.05
       robot_radius: 0.22
       plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.70
+        cost_scaling_factor: 1.0
+        inflation_radius: 0.25
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -257,7 +253,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.7
+        inflation_radius: 0.25
       always_send_full_costmap: True
 
 # The yaml_filename does not need to be specified since it going to be set by defaults in launch.
@@ -337,10 +333,10 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.5, 0.0, 2.0]
-    min_velocity: [-0.5, 0.0, -2.0]
-    max_accel: [2.5, 0.0, 3.2]
-    max_decel: [-2.5, 0.0, -3.2]
+    max_velocity: [2.0, 2.0, 2.0]
+    min_velocity: [-2.0, -2.0, -2.0]
+    max_accel: [10.0, 10.0, 10.0]
+    max_decel: [-10.0, -10.0, -10.0]
     odom_topic: "odom"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
@@ -348,7 +344,7 @@ velocity_smoother:
 
 collision_monitor:
   ros__parameters:
-    base_frame_id: "base_footprint"
+    base_frame_id: "base_link"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
     cmd_vel_out_topic: "cmd_vel"
@@ -364,7 +360,7 @@ collision_monitor:
       type: "polygon"
       action_type: "approach"
       footprint_topic: "/local_costmap/published_footprint"
-      time_before_collision: 1.2
+      time_before_collision: 0.5
       simulation_time_step: 0.1
       min_points: 6
       visualize: False
@@ -432,7 +428,7 @@ docking_server:
 
 loopback_simulator:
   ros__parameters:
-    base_frame_id: "base_footprint"
+    base_frame_id: "base_link"
     odom_frame_id: "odom"
     map_frame_id: "map"
     scan_frame_id: "base_scan"  # tb4_loopback_simulator.launch.py remaps to 'rplidar_link'
@@ -445,6 +441,9 @@ rtabmap:
     subscribe_rgb: false
     subscribe_scan: true
     approx_sync: true
+    sync_queue_size: 50
+    topic_queue_size: 30
+    qos: 2
     #use_action_for_goal: true
     Reg/Strategy: "1"
     Reg/Force3DoF: "true"
