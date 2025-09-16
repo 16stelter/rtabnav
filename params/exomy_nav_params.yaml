@@ -107,11 +107,11 @@ controller_server:
       vx_std: 0.2
       vy_std: 0.2
       wz_std: 0.2
-      vx_max: 2.0
-      vx_min: -2.0
-      vy_max: 2.0
-      vy_min: -2.0
-      wz_max: 2.0
+      vx_max: 0.25
+      vx_min: -0.25
+      vy_max: 0.25
+      vy_min: -0.25
+      wz_max: 1.0
       iteration_count: 1
       prune_distance: 1.7
       transform_tolerance: 0.1
@@ -333,8 +333,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [2.0, 2.0, 2.0]
-    min_velocity: [-2.0, -2.0, -2.0]
+    max_velocity: [0.25, 0.25, 1.0]
+    min_velocity: [-0.25, -0.25, -1.0]
     max_accel: [10.0, 10.0, 10.0]
     max_decel: [-10.0, -10.0, -10.0]
     odom_topic: "odom"
@@ -439,15 +439,20 @@ rtabmap:
     frame_id: "base_link"
     subscribe_depth: false
     subscribe_rgb: false
+    subscribe_scan: false
     subscribe_scan_cloud: true
     approx_sync: true
     sync_queue_size: 50
     topic_queue_size: 30
+    tf_delay: 0.05
     qos: 2
     #use_action_for_goal: true
     Reg/Strategy: "1"
-    Reg/Force3DoF: "true"
+    Reg/Force3DoF: "false"
     RGBD/NeighborLinkRefining: "true"
+    Grid/DepthDecimation: "1"
     Grid/RangeMin: "0.2"
-    Grid/RayTracing: "true"
+    Grid/RangeMax: "3.0"
+    Grid/3D: "true"
+    Grid/FromScan: "true"
     Optimizer/GravitySigma: "0"

@@ -72,7 +72,7 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(package_dir, 'params', 'go2_nav_params.yaml'),
+        default_value=os.path.join(package_dir, 'params', 'exomy_nav_params.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes',
     )
 
@@ -168,16 +168,17 @@ def generate_launch_description():
     gz_robot = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(sim_dir, 'launch', 'spawn_tb3.launch.py')),
-        launch_arguments={'namespace': namespace,
-                          'use_sim_time': use_sim_time,
-                          'robot_name': robot_name,
-                          'robot_sdf': robot_sdf,
-                          'x_pose': pose['x'],
-                          'y_pose': pose['y'],
-                          'z_pose': pose['z'],
-                          'roll': pose['R'],
-                          'pitch': pose['P'],
-                          'yaw': pose['Y']}.items())
+            condition=IfCondition(use_simulator),
+            launch_arguments={'namespace': namespace,
+                            'use_sim_time': use_sim_time,
+                            'robot_name': robot_name,
+                            'robot_sdf': robot_sdf,
+                            'x_pose': pose['x'],
+                            'y_pose': pose['y'],
+                            'z_pose': pose['z'],
+                            'roll': pose['R'],
+                            'pitch': pose['P'],
+                            'yaw': pose['Y']}.items())
 
     # RViz configuration
     rviz_cmd = IncludeLaunchDescription(

@@ -90,7 +90,7 @@ def generate_launch_description():
                 name='lifecycle_manager_slam',
                 output='screen',
                 arguments=['--ros-args', '--log-level', log_level],
-                parameters=[{'autostart': 'true'}, {'node_names': lifecycle_nodes}],
+                parameters=[{'autostart': True}, {'node_names': lifecycle_nodes}],
             ),
         ]
     )
@@ -101,10 +101,11 @@ def generate_launch_description():
       arguments=['--ros-args', '--log-level', log_level],
       remappings=[
         ('/scan', 'scan'),
+        ('/scan_cloud', 'pointcloud'),
         ('/tf', 'tf'),
         ('/tf_static', 'tf_static'),
         ('/map', 'map'),
-        ('/odom', 'odom')
+        ('/odom', 'odom'),
       ]
     )
 
