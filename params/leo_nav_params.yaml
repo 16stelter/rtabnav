@@ -5,7 +5,7 @@ amcl:
     alpha3: 0.2
     alpha4: 0.2
     alpha5: 0.2
-    base_frame_id: "base_link"
+    base_frame_id: "leo/base_link"
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
     beam_skip_threshold: 0.3
@@ -25,7 +25,7 @@ amcl:
     recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
     resample_interval: 1
-    robot_model_type: "nav2_amcl::OmniMotionModel" #"nav2_amcl::DifferentialMotionModel"
+    robot_model_type: "nav2_amcl::DifferentialMotionModel" # "nav2_amcl::OmniMotionModel"
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
@@ -36,13 +36,12 @@ amcl:
     z_max: 0.05
     z_rand: 0.5
     z_short: 0.05
-    scan_topic: scan
 
 bt_navigator:
   ros__parameters:
     global_frame: map
-    robot_base_frame: base_link
-    odom_topic: /odom
+    robot_base_frame: leo/base_link
+    odom_topic: /leo/true_pose
     bt_loop_duration: 10
     default_server_timeout: 20
     wait_for_service_timeout: 1000
@@ -67,6 +66,7 @@ bt_navigator:
 
 controller_server:
   ros__parameters:
+    odom_topic: /leo/true_pose
     controller_frequency: 20.0
     costmap_update_timeout: 0.30
     min_x_velocity_threshold: 0.001
@@ -101,23 +101,20 @@ controller_server:
       batch_size: 2000
       ax_max: 10.0
       ax_min: -10.0
-      ay_max: 10.0
-      ay_min: -10.0
       az_max: 10.0
-      vx_std: 0.2
-      vy_std: 0.2
-      wz_std: 0.2
-      vx_max: 0.25
-      vx_min: -0.25
-      vy_max: 0.25
-      vy_min: -0.25
-      wz_max: 1.0
-      iteration_count: 1
+      az_min: -10.0
+      vx_max: 5.0
+      vx_min: -5.0
+      wz_max: 5.0
+      wz_min: -5.0
+      vx_std: 0.5
+      wz_std: 0.5
+      iteration_count: 5
       prune_distance: 1.7
       transform_tolerance: 0.1
       temperature: 0.3
       gamma: 0.015
-      motion_model: "Omni" #"DiffDrive"
+      motion_model: "DiffDrive" # "Omni"
       visualize: true
       regenerate_noises: true
       TrajectoryVisualizer:
@@ -138,7 +135,7 @@ controller_server:
         cost_weight: 3.0
         threshold_to_consider: 0.5
       PreferForwardCritic:
-        enabled: true
+        enabled: false
         cost_power: 1
         cost_weight: 10.0
         threshold_to_consider: 0.5
@@ -186,7 +183,7 @@ local_costmap:
       update_frequency: 5.0
       publish_frequency: 2.0
       global_frame: odom
-      robot_base_frame: base_link
+      robot_base_frame: leo/base_link
       rolling_window: true
       width: 7
       height: 7
@@ -206,13 +203,13 @@ local_costmap:
         z_voxels: 16
         max_obstacle_height: 2.0
         mark_threshold: 0
-        observation_sources: scan
-        scan:
-          topic: /scan
+        observation_sources: pointcloud
+        pointcloud:
+          topic: leo/pointcloud/points
           max_obstacle_height: 2.0
           clearing: True
           marking: True
-          data_type: "LaserScan"
+          data_type: "PointCloud2"
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
           obstacle_max_range: 2.5
@@ -228,7 +225,7 @@ global_costmap:
       update_frequency: 1.0
       publish_frequency: 1.0
       global_frame: map
-      robot_base_frame: base_link
+      robot_base_frame: leo/base_link
       robot_radius: 0.22
       resolution: 0.05
       track_unknown_space: true
@@ -236,17 +233,18 @@ global_costmap:
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
-        observation_sources: scan
-        scan:
-          topic: /scan
+        observation_sources: pointcloud
+        pointcloud:
+          topic: leo/pointcloud/points  # <-- adjust to your RTAB-Map topic
+          data_type: "PointCloud2"
+          marking: true
+          clearing: true
           max_obstacle_height: 2.0
-          clearing: True
-          marking: True
-          data_type: "LaserScan"
-          raytrace_max_range: 3.0
-          raytrace_min_range: 0.0
+          min_obstacle_height: 0.05
           obstacle_max_range: 2.5
           obstacle_min_range: 0.0
+          raytrace_max_range: 3.0
+          raytrace_min_range: 0.0
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -310,7 +308,7 @@ behavior_server:
       plugin: "nav2_behaviors::AssistedTeleop"
     local_frame: odom
     global_frame: map
-    robot_base_frame: base_link
+    robot_base_frame: leo/base_link
     transform_tolerance: 0.1
     simulate_ahead_time: 2.0
     max_rotational_vel: 1.0
@@ -333,22 +331,22 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.25, 0.25, 1.0]
-    min_velocity: [-0.25, -0.25, -1.0]
+    max_velocity: [2.0, 2.0, 2.0]
+    min_velocity: [-2.0, -2.0, -2.0]
     max_accel: [10.0, 10.0, 10.0]
     max_decel: [-10.0, -10.0, -10.0]
-    odom_topic: "odom"
+    odom_topic: "leo/true_pose"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
 
 collision_monitor:
   ros__parameters:
-    base_frame_id: "base_link"
+    base_frame_id: "leo/base_link"
     odom_frame_id: "odom"
     cmd_vel_in_topic: "cmd_vel_smoothed"
-    cmd_vel_out_topic: "cmd_vel"
-    state_topic: "collision_monitor_state"
+    cmd_vel_out_topic: "leo/cmd_vel"
+    state_topic: "leo/collision_monitor_state"
     transform_tolerance: 0.2
     source_timeout: 1.0
     base_shift_correction: True
@@ -365,13 +363,10 @@ collision_monitor:
       min_points: 6
       visualize: False
       enabled: True
-    observation_sources: ["scan"]
-    scan:
-      type: "scan"
-      topic: "scan"
-      min_height: 0.15
-      max_height: 2.0
-      enabled: True
+    observation_sources: ["pointcloud"]
+    pointcloud:
+      topic: "leo/pointcloud/points"
+      type: "pointcloud"
 
 docking_server:
   ros__parameters:
@@ -382,7 +377,7 @@ docking_server:
     undock_linear_tolerance: 0.05
     undock_angular_tolerance: 0.1
     max_retries: 3
-    base_frame: "base_link"
+    base_frame: "leo/base_link"
     fixed_frame: "odom"
     dock_backwards: false
     dock_prestaging_tolerance: 0.5
@@ -428,32 +423,26 @@ docking_server:
 
 loopback_simulator:
   ros__parameters:
-    base_frame_id: "base_link"
+    base_frame_id: "leo/base_link"
     odom_frame_id: "odom"
     map_frame_id: "map"
-    scan_frame_id: "base_scan"  # tb4_loopback_simulator.launch.py remaps to 'rplidar_link'
     update_duration: 0.02
 
 rtabmap:
   ros__parameters:
-    frame_id: "base_link"
+    frame_id: "leo/base_link"
     subscribe_depth: false
     subscribe_rgb: false
-    subscribe_scan: false
     subscribe_scan_cloud: true
     approx_sync: true
     sync_queue_size: 50
     topic_queue_size: 30
-    tf_delay: 0.05
     qos: 2
     #use_action_for_goal: true
     Reg/Strategy: "1"
-    Reg/Force3DoF: "false"
+    Reg/Force3DoF: "true"
     RGBD/NeighborLinkRefining: "true"
-    Grid/DepthDecimation: "1"
     Grid/RangeMin: "0.2"
-    Grid/RangeMax: "3.0"
-    Grid/3D: "true"
-    Grid/FromScan: "true"
+    Grid/RayTracing: "true"
     Optimizer/GravitySigma: "0"
-    RGBD/NeighborLinkRefining: "false"
+    delete_db_on_start: true

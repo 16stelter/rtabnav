@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>rtabnav</name>
+  <name>rover_demo_rtabnav</name>
   <version>1.0.0</version>
   <description>Unitree go2 robot navigation</description>
   <maintainer email="sebastian.stelter@cranfield.ac.uk">Sebastian Stelter</maintainer>

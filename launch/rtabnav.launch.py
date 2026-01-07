@@ -24,7 +24,7 @@ from launch_ros.actions import Node, PushROSNamespace
 
 def generate_launch_description():
     # Get directories
-    package_dir = get_package_share_directory('rtabnav')
+    package_dir = get_package_share_directory('rover_demo_rtabnav')
     launch_dir = os.path.join(package_dir, 'launch')
     sim_dir = get_package_share_directory('nav2_minimal_tb3_sim')
 
@@ -72,7 +72,7 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(package_dir, 'params', 'exomy_nav_params.yaml'),
+        default_value=os.path.join(package_dir, 'params', 'leo_nav_params.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes',
     )
 

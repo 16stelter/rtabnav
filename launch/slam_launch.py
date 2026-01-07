@@ -37,7 +37,7 @@ def generate_launch_description():
     lifecycle_nodes = ['map_saver']
 
     # Getting directories and launch-files
-    package_dir = get_package_share_directory('rtabnav')
+    package_dir = get_package_share_directory('rover_demo_rtabnav')
 
     # Create our own temporary YAML files that include substitutions
     configured_params = ParameterFile(
@@ -101,11 +101,13 @@ def generate_launch_description():
       arguments=['--ros-args', '--log-level', log_level],
       remappings=[
         ('/scan', 'scan'),
-        ('/scan_cloud', 'pointcloud'),
+        ('/scan_cloud', 'leo/pointcloud/points'),
         ('/tf', 'tf'),
         ('/tf_static', 'tf_static'),
         ('/map', 'map'),
-        ('/odom', 'odom'),
+        ('/odom', 'leo/true_pose'),
+        ('/cmd_vel', 'leo/cmd_vel'),
+        ('/imu', 'leo/imu/data'),
       ]
     )
 

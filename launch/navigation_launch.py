@@ -28,7 +28,7 @@ from nav2_common.launch import RewrittenYaml
 
 def generate_launch_description():
     # Get the launch directory
-    package_dir = get_package_share_directory('rtabnav')
+    package_dir = get_package_share_directory('rover_demo_rtabnav')
 
     namespace = LaunchConfiguration('namespace')
     use_sim_time = LaunchConfiguration('use_sim_time')

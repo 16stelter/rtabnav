@@ -28,7 +28,7 @@ from nav2_common.launch import ReplaceString
 
 def generate_launch_description():
     # Get the launch directory
-    package_dir = get_package_share_directory('rtabnav')
+    package_dir = get_package_share_directory('rover_demo_rtabnav')
 
     # Create the launch configuration variables
     namespace = LaunchConfiguration('namespace')
