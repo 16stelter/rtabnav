@@ -33,6 +33,15 @@ def generate_launch_description():
     use_sim_time = LaunchConfiguration('use_sim_time')
     log_level = LaunchConfiguration('log_level')
 
+    remappings=[
+        ('scan_cloud', 'pointcloud/points'),
+        ('odom', 'true_pose'),
+        ('imu', 'imu/data'),
+        ('/tf', 'tf'),
+        ('/tf_static', 'tf_static'),
+        ('/map', 'map'),
+      ]
+
     # Variables
     lifecycle_nodes = ['map_saver']
 
@@ -43,7 +52,7 @@ def generate_launch_description():
     configured_params = ParameterFile(
         RewrittenYaml(
             source_file=params_file,
-           root_key=namespace,
+            root_key=namespace,
             param_rewrites={},
             convert_types=True,
         ),
@@ -78,35 +87,34 @@ def generate_launch_description():
             Node(
                 package='nav2_map_server',
                 executable='map_saver_server',
-              output='screen',
+                name='map_saver_server',
+                namespace=namespace,
+                output='screen',
                 respawn=False,
                 respawn_delay=2.0,
                 arguments=['--ros-args', '--log-level', log_level],
                 parameters=[configured_params],
+                remappings=remappings,
             ),
             Node(
                 package='nav2_lifecycle_manager',
                 executable='lifecycle_manager',
+                namespace=namespace,
                 name='lifecycle_manager_slam',
                 output='screen',
                 arguments=['--ros-args', '--log-level', log_level],
                 parameters=[{'autostart': True}, {'node_names': lifecycle_nodes}],
+                remappings=remappings,
             ),
         ]
     )
 
     start_rtabmap_cmd = Node(
       package='rtabmap_slam', executable='rtabmap', output='screen',
-      parameters=[params_file, {'use_sim_time': use_sim_time}],
+      parameters=[configured_params, {'use_sim_time': use_sim_time}],
       arguments=['--ros-args', '--log-level', log_level],
-      remappings=[
-        ('/scan', 'scan'),
-        ('/scan_cloud', 'pointcloud'),
-        ('/tf', 'tf'),
-        ('/tf_static', 'tf_static'),
-        ('/map', 'map'),
-        ('/odom', 'odom'),
-      ]
+      namespace=namespace,
+      remappings=remappings,
     )
 
     ld = LaunchDescription()

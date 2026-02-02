@@ -45,7 +45,6 @@ def generate_launch_description():
         'collision_monitor',
         'bt_navigator',
         'waypoint_follower',
-        'docking_server',
     ]
 
     # Map fully qualified names to relative ones so the node's namespace can be prepended.
@@ -54,7 +53,17 @@ def generate_launch_description():
     # https://github.com/ros/robot_state_publisher/pull/30
     # TODO(orduno) Substitute with `PushNodeRemapping`
     #              https://github.com/ros2/launch_ros/issues/56
-    remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
+    remappings=[
+        ('/scan', 'scan'),
+        ('/scan_cloud', 'pointcloud/points'),
+        ('/tf', 'tf'),
+        ('/tf_static', 'tf_static'),
+        ('/map', 'map'),
+        ('/odom', 'odom'),
+        ('odom', 'true_pose'),
+        ('/cmd_vel', 'cmd_vel'),
+        ('/imu', 'imu/data'),
+    ]
 
     # Create our own temporary YAML files that include substitutions
     param_substitutions = {'autostart': 'true'}
@@ -105,6 +114,7 @@ def generate_launch_description():
                         package='nav2_controller',
                         plugin='nav2_controller::ControllerServer',
                         name='controller_server',
+                        namespace=namespace,
                         parameters=[configured_params],
                         remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
                     ),
@@ -112,6 +122,7 @@ def generate_launch_description():
                         package='nav2_smoother',
                         plugin='nav2_smoother::SmootherServer',
                         name='smoother_server',
+                        namespace=namespace,
                         parameters=[configured_params],
                         remappings=remappings,
                     ),
@@ -119,6 +130,7 @@ def generate_launch_description():
                         package='nav2_planner',
                         plugin='nav2_planner::PlannerServer',
                         name='planner_server',
+                        namespace=namespace,
                         parameters=[configured_params],
                         remappings=remappings,
                     ),
@@ -126,6 +138,7 @@ def generate_launch_description():
                         package='nav2_behaviors',
                         plugin='behavior_server::BehaviorServer',
                         name='behavior_server',
+                        namespace=namespace,
                         parameters=[configured_params],
                         remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
                     ),
@@ -133,6 +146,7 @@ def generate_launch_description():
                         package='nav2_bt_navigator',
                         plugin='nav2_bt_navigator::BtNavigator',
                         name='bt_navigator',
+                        namespace=namespace,
                         parameters=[configured_params],
                         remappings=remappings,
                     ),
@@ -140,6 +154,7 @@ def generate_launch_description():
                         package='nav2_waypoint_follower',
                         plugin='nav2_waypoint_follower::WaypointFollower',
                         name='waypoint_follower',
+                        namespace=namespace,
                         parameters=[configured_params],
                         remappings=remappings,
                     ),
@@ -147,6 +162,7 @@ def generate_launch_description():
                         package='nav2_velocity_smoother',
                         plugin='nav2_velocity_smoother::VelocitySmoother',
                         name='velocity_smoother',
+                        namespace=namespace,
                         parameters=[configured_params],
                         remappings=remappings
                         + [('cmd_vel', 'cmd_vel_nav')],
@@ -155,13 +171,7 @@ def generate_launch_description():
                         package='nav2_collision_monitor',
                         plugin='nav2_collision_monitor::CollisionMonitor',
                         name='collision_monitor',
-                        parameters=[configured_params],
-                        remappings=remappings,
-                    ),
-                    ComposableNode(
-                        package='opennav_docking',
-                        plugin='opennav_docking::DockingServer',
-                        name='docking_server',
+                        namespace=namespace,
                         parameters=[configured_params],
                         remappings=remappings,
                     ),
@@ -169,9 +179,11 @@ def generate_launch_description():
                         package='nav2_lifecycle_manager',
                         plugin='nav2_lifecycle_manager::LifecycleManager',
                         name='lifecycle_manager_navigation',
+                        namespace=namespace,
                         parameters=[
                             {'autostart': True, 'node_names': lifecycle_nodes}
                         ],
+                        remappings=remappings,
                     ),
                 ],
             ),
