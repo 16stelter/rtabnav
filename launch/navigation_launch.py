@@ -13,15 +13,14 @@
 # limitations under the License.
 
 import os
+import yaml
 
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable
-from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable, OpaqueFunction
+from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import LoadComposableNodes, SetParameter
-from launch_ros.actions import Node
 from launch_ros.descriptions import ComposableNode, ParameterFile
 from nav2_common.launch import RewrittenYaml
 
@@ -30,65 +29,13 @@ def generate_launch_description():
     # Get the launch directory
     package_dir = get_package_share_directory('rtabnav')
 
-    namespace = LaunchConfiguration('namespace')
-    use_sim_time = LaunchConfiguration('use_sim_time')
-    params_file = LaunchConfiguration('params_file')
-    container_name = LaunchConfiguration('container_name')
-    container_name_full = (namespace, '/', container_name)
-
-    lifecycle_nodes = [
-        'controller_server',
-        'smoother_server',
-        'planner_server',
-        'behavior_server',
-        'velocity_smoother',
-        'collision_monitor',
-        'bt_navigator',
-        'waypoint_follower',
-    ]
-
-    # Map fully qualified names to relative ones so the node's namespace can be prepended.
-    # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
-    # https://github.com/ros/geometry2/issues/32
-    # https://github.com/ros/robot_state_publisher/pull/30
-    # TODO(orduno) Substitute with `PushNodeRemapping`
-    #              https://github.com/ros2/launch_ros/issues/56
-    remappings=[
-        ('/scan', 'scan'),
-        ('/scan_cloud', 'pointcloud/points'),
-        ('/tf', 'tf'),
-        ('/tf_static', 'tf_static'),
-        ('/map', 'map'),
-        ('/odom', 'odom'),
-        ('odom', 'true_pose'),
-        ('/cmd_vel', 'cmd_vel'),
-        ('/imu', 'imu/data'),
-    ]
-
-    # Create our own temporary YAML files that include substitutions
-    param_substitutions = {'autostart': 'true'}
-
-    configured_params = ParameterFile(
-        RewrittenYaml(
-            source_file=params_file,
-            root_key=namespace,
-            param_rewrites=param_substitutions,
-            convert_types=True,
-        ),
-        allow_substs=True,
-    )
-
-    stdout_linebuf_envvar = SetEnvironmentVariable(
-        'RCUTILS_LOGGING_BUFFERED_STREAM', '1'
-    )
-
     declare_namespace_cmd = DeclareLaunchArgument(
         'namespace', default_value='', description='Top-level namespace'
     )
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='true',
+        default_value='false',
         description='Use simulation (Gazebo) clock if true',
     )
 
@@ -102,6 +49,54 @@ def generate_launch_description():
         'container_name',
         default_value='nav2_container',
         description='the name of conatiner that nodes will load in if use composition',
+    )
+
+    
+
+    # Create the launch description and populate
+    return LaunchDescription([
+        declare_namespace_cmd,
+        declare_use_sim_time_cmd,
+        declare_params_file_cmd,
+        declare_container_name_cmd,
+        OpaqueFunction(function=launch_nodes),
+    ])
+
+def launch_nodes(context, *args, **kwargs):
+    use_sim_time = LaunchConfiguration('use_sim_time').perform(context).lower() == 'true'
+    params_file = LaunchConfiguration('params_file').perform(context)
+    remap_file = LaunchConfiguration('remap_file').perform(context)
+    namespace = LaunchConfiguration('namespace').perform(context)
+    container_name = LaunchConfiguration('container_name').perform(context)
+    container_name_full = f'{namespace}/{container_name}'
+
+    lifecycle_nodes = [
+        'controller_server',
+        'smoother_server',
+        'planner_server',
+        'behavior_server',
+        'velocity_smoother',
+        'collision_monitor',
+        'bt_navigator',
+        'waypoint_follower',
+    ]
+    
+    param_substitutions = {'autostart': 'true'}
+
+    configured_params = ParameterFile(
+        RewrittenYaml(
+            source_file=params_file,
+            root_key=namespace,
+            param_rewrites=param_substitutions,
+            convert_types=True,
+        ),
+        allow_substs=True,
+    )
+
+    remappings = load_remappings(remap_file)
+
+    stdout_linebuf_envvar = SetEnvironmentVariable(
+        'RCUTILS_LOGGING_BUFFERED_STREAM', '1'
     )
 
     load_composable_nodes = GroupAction(
@@ -190,20 +185,9 @@ def generate_launch_description():
         ],
     )
 
-    
+    return [stdout_linebuf_envvar, load_composable_nodes]
 
-    # Create the launch description and populate
-    ld = LaunchDescription()
-
-    # Set environment variables
-    ld.add_action(stdout_linebuf_envvar)
-
-    # Declare the launch options
-    ld.add_action(declare_namespace_cmd)
-    ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_params_file_cmd)
-    ld.add_action(declare_container_name_cmd)
-    # Add the actions to launch all of the navigation nodes
-    ld.add_action(load_composable_nodes)
-
-    return ld
+def load_remappings(remap_file): 
+    with open(remap_file, 'r') as f: 
+        data = yaml.safe_load(f) 
+        return [(item['from'], item['to']) for item in data['remappings']]

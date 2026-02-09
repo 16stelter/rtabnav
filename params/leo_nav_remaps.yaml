@@ -1,0 +1,15 @@
+remappings:
+  - from: scan_cloud
+    to: pointcloud/points
+  - from: /tf
+    to: tf
+  - from: /tf_static
+    to: tf_static
+  - from: /map
+    to: map
+  - from: odom
+    to: true_pose
+  - from: /cmd_vel
+    to: cmd_vel
+  - from: imu
+    to: imu/data_raw

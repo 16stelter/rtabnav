@@ -13,51 +13,21 @@
 # limitations under the License.
 
 import os
+import yaml
 
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
-from launch.conditions import IfCondition, UnlessCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import Node, SetParameter, SetRemap
+from launch_ros.actions import Node, SetParameter
 from launch_ros.descriptions import ParameterFile
-from nav2_common.launch import HasNodeParams, RewrittenYaml
+from nav2_common.launch import RewrittenYaml
 
 
 def generate_launch_description():
-    # Input parameters declaration
-    namespace = LaunchConfiguration('namespace')
-    params_file = LaunchConfiguration('params_file')
-    use_sim_time = LaunchConfiguration('use_sim_time')
-    log_level = LaunchConfiguration('log_level')
-
-    remappings=[
-        ('scan_cloud', 'pointcloud/points'),
-        ('odom', 'true_pose'),
-        ('imu', 'imu/data'),
-        ('/tf', 'tf'),
-        ('/tf_static', 'tf_static'),
-        ('/map', 'map'),
-      ]
-
-    # Variables
-    lifecycle_nodes = ['map_saver']
-
     # Getting directories and launch-files
     package_dir = get_package_share_directory('rtabnav')
-
-    # Create our own temporary YAML files that include substitutions
-    configured_params = ParameterFile(
-        RewrittenYaml(
-            source_file=params_file,
-            root_key=namespace,
-            param_rewrites={},
-            convert_types=True,
-        ),
-        allow_substs=True,
-    )
 
     # Declare the launch arguments
     declare_namespace_cmd = DeclareLaunchArgument(
@@ -72,13 +42,43 @@ def generate_launch_description():
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='True',
+        default_value='False',
         description='Use simulation (Gazebo) clock if true',
     )
 
     declare_log_level_cmd = DeclareLaunchArgument(
         'log_level', default_value='info', description='log level'
     )
+
+
+    return LaunchDescription([
+        declare_namespace_cmd,
+        declare_params_file_cmd,
+        declare_use_sim_time_cmd,
+        declare_log_level_cmd,
+        OpaqueFunction(function=launch_nodes),
+    ])
+
+def launch_nodes(context, *args, **kwargs):
+    namespace = LaunchConfiguration('namespace').perform(context)
+    params_file = LaunchConfiguration('params_file').perform(context)
+    use_sim_time = LaunchConfiguration('use_sim_time').perform(context).lower() == 'true'
+    log_level = LaunchConfiguration('log_level').perform(context)
+    remap_file = LaunchConfiguration('remap_file').perform(context)
+
+    lifecycle_nodes = ['map_saver']
+
+    configured_params = ParameterFile(
+        RewrittenYaml(
+            source_file=params_file,
+            root_key=namespace,
+            param_rewrites={},
+            convert_types=True,
+        ),
+        allow_substs=True,
+    )
+
+    remappings = load_remappings(remap_file)
 
     # Nodes launching commands
     start_map_server = GroupAction(
@@ -87,7 +87,7 @@ def generate_launch_description():
             Node(
                 package='nav2_map_server',
                 executable='map_saver_server',
-                name='map_saver_server',
+                name='map_saver',
                 namespace=namespace,
                 output='screen',
                 respawn=False,
@@ -117,18 +117,10 @@ def generate_launch_description():
       remappings=remappings,
     )
 
-    ld = LaunchDescription()
+    return [start_map_server, start_rtabmap_cmd]
 
-    # Declare the launch options
-    ld.add_action(declare_namespace_cmd)
-    ld.add_action(declare_params_file_cmd)
-    ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_log_level_cmd)
 
-    # Running Map Saver Server
-    ld.add_action(start_map_server)
-
-    # Running SLAM Toolbox (Only one of them will be run)
-    ld.add_action(start_rtabmap_cmd)
-
-    return ld
+def load_remappings(remap_file): 
+    with open(remap_file, 'r') as f: 
+        data = yaml.safe_load(f) 
+        return [(item['from'], item['to']) for item in data['remappings']]

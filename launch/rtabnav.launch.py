@@ -1,55 +1,31 @@
 import os
 import tempfile
+import yaml
 
 from ament_index_python.packages import get_package_share_directory
 
 from launch import LaunchDescription
 from launch.actions import (
     DeclareLaunchArgument,
-    ExecuteProcess,
     IncludeLaunchDescription,
     OpaqueFunction,
-    RegisterEventHandler,
     SetEnvironmentVariable,
     GroupAction
 )
-from launch.conditions import IfCondition
-from launch.event_handlers import OnShutdown
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import LaunchConfiguration, PythonExpression, Command
-from launch_ros.descriptions import ParameterValue, ParameterFile
+from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch_ros.descriptions import ParameterFile
 from nav2_common.launch import ReplaceString, RewrittenYaml
-from launch_ros.actions import Node, PushROSNamespace
+from launch_ros.actions import Node
 
 
 def generate_launch_description():
     # Get directories
     package_dir = get_package_share_directory('rtabnav')
-    launch_dir = os.path.join(package_dir, 'launch')
-    sim_dir = get_package_share_directory('nav2_minimal_tb3_sim')
-
-    # Launch variables
-    namespace = LaunchConfiguration('namespace')
-    use_namespace = LaunchConfiguration('use_namespace')
-    use_sim_time = LaunchConfiguration('use_sim_time')
-    params_file = LaunchConfiguration('params_file')
-    rviz_config_file = LaunchConfiguration('rviz_config_file')
-
-    remappings=[
-        ('/scan', 'scan'),
-        ('/scan_cloud', 'pointcloud/points'),
-        ('/tf', 'tf'),
-        ('/tf_static', 'tf_static'),
-        ('/map', 'map'),
-        ('/odom', 'odom'),
-        ('odom', 'true_pose'),
-        ('/cmd_vel', 'cmd_vel'),
-        ('/imu', 'imu/data'),
-    ]
 
     # Declare the launch arguments
     declare_namespace_cmd = DeclareLaunchArgument(
-        'namespace', default_value='leo', description='Top-level namespace'
+        'namespace', default_value='', description='Top-level namespace'
     )
 
     declare_use_namespace_cmd = DeclareLaunchArgument(
@@ -60,7 +36,7 @@ def generate_launch_description():
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
-        default_value='true',
+        default_value='false',
         description='Use simulation (Gazebo) clock if true',
     )
 
@@ -76,17 +52,51 @@ def generate_launch_description():
         description='Full path to the RVIZ config file to use',
     )
 
-    # Remapping parameters if a namespace is used
-    params_file = LaunchConfiguration('params_file')
+    declare_remap_file_cmd = DeclareLaunchArgument(
+        'remap_file',
+        default_value=os.path.join(package_dir, 'params', 'leo_nav_remaps.yaml'),
+        description='Full path to the ROS2 remap file to use for all launched nodes',
+    )
+
+    return LaunchDescription([
+        declare_namespace_cmd,
+        declare_use_namespace_cmd,
+        declare_use_sim_time_cmd,
+        declare_params_file_cmd,
+        declare_remap_file_cmd,
+        declare_rviz_config_file_cmd,
+        OpaqueFunction(function=launch_nodes)
+    ])
+
+def launch_nodes(context, *args, **kwargs):
+    namespace = LaunchConfiguration('namespace').perform(context)
+    use_namespace = LaunchConfiguration('use_namespace').perform(context)
+    use_sim_time = LaunchConfiguration('use_sim_time').perform(context)
+    params_file = LaunchConfiguration('params_file').perform(context)
+    rviz_config_file = LaunchConfiguration('rviz_config_file').perform(context)
+    remap_file = LaunchConfiguration('remap_file').perform(context)
+    launch_dir = os.path.join(get_package_share_directory('rtabnav'), 'launch')
+
+
+    namespaced_params_file = ReplaceString(
+        source_file=params_file,
+        replacements={
+            '<robot_namespace>': PythonExpression([
+                '"" if "', namespace, '" == "" else "/" + "', namespace + '"'
+            ]),
+        },
+    )
     configured_params = ParameterFile(
         RewrittenYaml(
-            source_file=params_file,
+            source_file=namespaced_params_file,
             root_key=namespace,
             param_rewrites={},
             convert_types=True,
         ),
         allow_substs=True,
     )
+
+    remappings = load_remappings(remap_file)
 
     # RViz configuration
     rviz_cmd = IncludeLaunchDescription(
@@ -119,7 +129,8 @@ def generate_launch_description():
                 launch_arguments={
                     'namespace': namespace,
                     'use_sim_time': use_sim_time,
-                    'params_file': params_file,
+                    'params_file': namespaced_params_file,
+                    'remap_file': remap_file,
                 }.items(),
             ),
             IncludeLaunchDescription(
@@ -129,8 +140,9 @@ def generate_launch_description():
                 launch_arguments={
                     'namespace': namespace,
                     'use_sim_time': use_sim_time,
-                    'params_file': params_file,
+                    'params_file': namespaced_params_file,
                     'container_name': 'nav2_container',
+                    'remap_file': remap_file,
                 }.items(),
             ),
         ]
@@ -140,18 +152,9 @@ def generate_launch_description():
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1'
     )
 
-    # Launch description
-    ld = LaunchDescription()
+    return [stdout_linebuf_envvar, rviz_cmd, bringup_cmd_group]
 
-    ld.add_action(stdout_linebuf_envvar)
-    ld.add_action(declare_namespace_cmd)
-    ld.add_action(declare_use_namespace_cmd)
-    ld.add_action(declare_use_sim_time_cmd)
-    ld.add_action(declare_params_file_cmd)
-
-    ld.add_action(declare_rviz_config_file_cmd)
-
-    ld.add_action(rviz_cmd)
-    ld.add_action(bringup_cmd_group)
-
-    return ld
+def load_remappings(remap_file): 
+    with open(remap_file, 'r') as f: 
+        data = yaml.safe_load(f) 
+        return [(item['from'], item['to']) for item in data['remappings']]
