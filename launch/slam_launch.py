@@ -109,15 +109,7 @@ def launch_nodes(context, *args, **kwargs):
         ]
     )
 
-    start_rtabmap_cmd = Node(
-      package='rtabmap_slam', executable='rtabmap', output='screen',
-      parameters=[configured_params, {'use_sim_time': use_sim_time}],
-      arguments=['--ros-args', '--log-level', log_level],
-      namespace=namespace,
-      remappings=remappings,
-    )
-
-    return [start_map_server, start_rtabmap_cmd]
+    return [start_map_server]
 
 
 def load_remappings(remap_file): 

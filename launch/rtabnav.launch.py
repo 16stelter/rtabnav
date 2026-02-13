@@ -109,6 +109,14 @@ def launch_nodes(context, *args, **kwargs):
         }.items(),
     )
 
+    start_rtabmap_cmd = Node(
+      package='rtabmap_slam', executable='rtabmap', output='screen',
+      parameters=[configured_params, {'use_sim_time': use_sim_time.lower() == 'true'}],
+      arguments=['--ros-args', '--log-level', 'info'],
+      namespace=namespace,
+      remappings=remappings,
+    )
+
     # Bringup commands for the navigation stack
     bringup_cmd_group = GroupAction(
         [
@@ -152,7 +160,7 @@ def launch_nodes(context, *args, **kwargs):
         'RCUTILS_LOGGING_BUFFERED_STREAM', '1'
     )
 
-    return [stdout_linebuf_envvar, rviz_cmd, bringup_cmd_group]
+    return [stdout_linebuf_envvar, start_rtabmap_cmd, rviz_cmd, bringup_cmd_group]
 
 def load_remappings(remap_file): 
     with open(remap_file, 'r') as f: 
