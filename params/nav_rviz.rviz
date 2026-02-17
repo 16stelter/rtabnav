@@ -28,7 +28,7 @@ Panels:
     Experimental: false
     Name: Time
     SyncMode: 0
-    SyncSource: PointCloud2
+    SyncSource: ""
 Visualization Manager:
   Class: ""
   Displays:
@@ -90,53 +90,69 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        drone/base_link:
+        FL_calf:
           Value: true
-        drone/rotor_fl:
+        FL_calflower:
           Value: true
-        drone/rotor_fr:
+        FL_calflower1:
           Value: true
-        drone/rotor_rl:
+        FL_foot:
           Value: true
-        drone/rotor_rr:
+        FL_hip:
           Value: true
-        leo/antenna_link:
+        FL_thigh:
           Value: true
-        leo/base_footprint:
+        FR_calf:
           Value: true
-        leo/base_link:
+        FR_calflower:
           Value: true
-        leo/camera_frame:
+        FR_calflower1:
           Value: true
-        leo/camera_optical_frame:
+        FR_foot:
           Value: true
-        leo/imu_frame:
+        FR_hip:
           Value: true
-        leo/lidar_frame:
+        FR_thigh:
           Value: true
-        leo/rocker_L_link:
+        Head_lower:
           Value: true
-        leo/rocker_R_link:
+        Head_upper:
           Value: true
-        leo/rotor_FL_link:
+        RL_calf:
           Value: true
-        leo/rotor_FR_link:
+        RL_calflower:
           Value: true
-        leo/rotor_RL_link:
+        RL_calflower1:
           Value: true
-        leo/rotor_RR_link:
+        RL_foot:
           Value: true
-        leo/wheel_FL_link:
+        RL_hip:
           Value: true
-        leo/wheel_FR_link:
+        RL_thigh:
           Value: true
-        leo/wheel_RL_link:
+        RR_calf:
           Value: true
-        leo/wheel_RR_link:
+        RR_calflower:
+          Value: true
+        RR_calflower1:
+          Value: true
+        RR_foot:
+          Value: true
+        RR_hip:
+          Value: true
+        RR_thigh:
+          Value: true
+        base_link:
+          Value: true
+        hesai_lidar:
+          Value: true
+        imu:
           Value: true
         map:
           Value: true
-        world:
+        odom:
+          Value: true
+        utlidar_lidar:
           Value: true
       Marker Scale: 1
       Name: TF
@@ -145,44 +161,48 @@ Visualization Manager:
       Show Names: false
       Tree:
         map:
-          world:
-            drone/base_link:
-              drone/rotor_fl:
+          odom:
+            base_link:
+              FL_hip:
+                FL_thigh:
+                  FL_calf:
+                    FL_calflower:
+                      FL_calflower1:
+                        {}
+                    FL_foot:
+                      {}
+              FR_hip:
+                FR_thigh:
+                  FR_calf:
+                    FR_calflower:
+                      FR_calflower1:
+                        {}
+                    FR_foot:
+                      {}
+              Head_upper:
+                Head_lower:
+                  {}
+              RL_hip:
+                RL_thigh:
+                  RL_calf:
+                    RL_calflower:
+                      RL_calflower1:
+                        {}
+                    RL_foot:
+                      {}
+              RR_hip:
+                RR_thigh:
+                  RR_calf:
+                    RR_calflower:
+                      RR_calflower1:
+                        {}
+                    RR_foot:
+                      {}
+              hesai_lidar:
                 {}
-              drone/rotor_fr:
+              imu:
                 {}
-              drone/rotor_rl:
-                {}
-              drone/rotor_rr:
-                {}
-            leo/base_footprint:
-              leo/base_link:
-                leo/antenna_link:
-                  {}
-                leo/camera_frame:
-                  leo/camera_optical_frame:
-                    {}
-                leo/lidar_frame:
-                  {}
-                leo/rocker_L_link:
-                  leo/wheel_FL_link:
-                    {}
-                  leo/wheel_RL_link:
-                    {}
-                leo/rocker_R_link:
-                  leo/wheel_FR_link:
-                    {}
-                  leo/wheel_RR_link:
-                    {}
-                leo/rotor_FL_link:
-                  {}
-                leo/rotor_FR_link:
-                  {}
-                leo/rotor_RL_link:
-                  {}
-                leo/rotor_RR_link:
-                  {}
-              leo/imu_frame:
+              utlidar_lidar:
                 {}
       Update Interval: 0
       Value: true
@@ -256,7 +276,7 @@ Visualization Manager:
       Class: rviz_default_plugins/Map
       Color Scheme: map
       Draw Behind: false
-      Enabled: false
+      Enabled: true
       Name: Map
       Topic:
         Depth: 5
@@ -272,7 +292,7 @@ Visualization Manager:
         Reliability Policy: Reliable
         Value: local_costmap/costmap_updates
       Use Timestamp: false
-      Value: false
+      Value: true
     - Class: octomap_rviz_plugins/ColorOccupancyGrid
       Enabled: false
       Max. Height Display: 3.4028234663852886e+38
@@ -336,16 +356,16 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/Orbit
-      Distance: 9.043196678161621
+      Distance: 17.849666595458984
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.05999999865889549
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 1.1596510410308838
-        Y: 0.18518979847431183
-        Z: -0.2634490728378296
+        X: -0.48046955466270447
+        Y: 1.0432413816452026
+        Z: -0.41384363174438477
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.05000000074505806
       Invert Z Axis: false

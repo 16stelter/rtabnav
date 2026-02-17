@@ -77,6 +77,7 @@ def launch_nodes(context, *args, **kwargs):
         'behavior_server',
         'velocity_smoother',
         'bt_navigator',
+        'collision_monitor',
         'waypoint_follower',
     ]
     
@@ -153,13 +154,20 @@ def launch_nodes(context, *args, **kwargs):
                         remappings=remappings,
                     ),
                     ComposableNode(
+                        package='nav2_collision_monitor',
+                        plugin='nav2_collision_monitor::CollisionMonitor',
+                        name='collision_monitor',
+                        namespace=namespace,
+                        parameters=[configured_params],
+                        remappings=remappings,
+                    ),
+                    ComposableNode(
                         package='nav2_velocity_smoother',
                         plugin='nav2_velocity_smoother::VelocitySmoother',
                         name='velocity_smoother',
                         namespace=namespace,
                         parameters=[configured_params],
-                        remappings=remappings
-                        + [('cmd_vel', 'cmd_vel_nav'), ('cmd_vel_smoothed', 'cmd_vel')],
+                        remappings=remappings + [('cmd_vel', 'cmd_vel_nav')],
                     ),
                     ComposableNode(
                         package='nav2_lifecycle_manager',

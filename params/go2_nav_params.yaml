@@ -208,16 +208,16 @@ local_costmap:
         mark_threshold: 0
         observation_sources: pointcloud
         pointcloud:
-          topic: <robot_namespace>/cloud_map
+          topic: <robot_namespace>/hesai/pointcloud
           max_obstacle_height: 2.0
           min_obstacle_height: 0.2
           clearing: True
           marking: True
           data_type: "PointCloud2"
           raytrace_max_range: 3.0
-          raytrace_min_range: 0.0
+          raytrace_min_range: 0.4
           obstacle_max_range: 2.5
-          obstacle_min_range: 0.0
+          obstacle_min_range: 0.4
       static_layer:
         plugin: "nav2_costmap_2d::StaticLayer"
         map_subscribe_transient_local: True
@@ -369,8 +369,9 @@ collision_monitor:
       enabled: True
     observation_sources: ["pointcloud"]
     pointcloud:
-      topic: "<robot_namespace>/cloud_map"
+      topic: "<robot_namespace>/hesai/pointcloud"
       type: "pointcloud"
+      min_range: 0.4
 
 loopback_simulator:
   ros__parameters:
