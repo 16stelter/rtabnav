@@ -28,12 +28,6 @@ def generate_launch_description():
         'namespace', default_value='', description='Top-level namespace'
     )
 
-    declare_use_namespace_cmd = DeclareLaunchArgument(
-        'use_namespace',
-        default_value='true',
-        description='Whether to apply a namespace to the navigation stack',
-    )
-
     declare_use_sim_time_cmd = DeclareLaunchArgument(
         'use_sim_time',
         default_value='false',
@@ -60,7 +54,6 @@ def generate_launch_description():
 
     return LaunchDescription([
         declare_namespace_cmd,
-        declare_use_namespace_cmd,
         declare_use_sim_time_cmd,
         declare_params_file_cmd,
         declare_remap_file_cmd,
@@ -70,7 +63,6 @@ def generate_launch_description():
 
 def launch_nodes(context, *args, **kwargs):
     namespace = LaunchConfiguration('namespace').perform(context)
-    use_namespace = LaunchConfiguration('use_namespace').perform(context)
     use_sim_time = LaunchConfiguration('use_sim_time').perform(context)
     params_file = LaunchConfiguration('params_file').perform(context)
     rviz_config_file = LaunchConfiguration('rviz_config_file').perform(context)
@@ -103,7 +95,6 @@ def launch_nodes(context, *args, **kwargs):
         PythonLaunchDescriptionSource(os.path.join(launch_dir, 'rviz_launch.py')),
         launch_arguments={
             'namespace': namespace,
-            'use_namespace': use_namespace,
             'use_sim_time': use_sim_time,
             'rviz_config': rviz_config_file,
         }.items(),
