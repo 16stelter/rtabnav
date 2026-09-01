@@ -437,23 +437,42 @@ loopback_simulator:
 rtabmap:
   ros__parameters:
     frame_id: "base_link"
-    subscribe_depth: false
-    subscribe_rgb: false
+    map_frame_id: "map"
+    odom_frame_id: "odom"
+    subscribe_depth: true
+    subscribe_rgb: true
     subscribe_scan: false
-    subscribe_scan_cloud: true
+    subscribe_scan_cloud: false
     approx_sync: true
     sync_queue_size: 50
     topic_queue_size: 30
     tf_delay: 0.05
     qos: 2
-    #use_action_for_goal: true
-    Reg/Strategy: "1"
-    Reg/Force3DoF: "false"
-    RGBD/NeighborLinkRefining: "true"
-    Grid/DepthDecimation: "1"
-    Grid/RangeMin: "0.2"
-    Grid/RangeMax: "3.0"
-    Grid/3D: "true"
-    Grid/FromScan: "true"
-    Optimizer/GravitySigma: "0"
-    RGBD/NeighborLinkRefining: "false"
+    Vis/FeatureType: "6" # ORB
+    Vis/MaxFeatures: "2000"
+    Vis/MinInliers: "20"
+    Vis/EstimationType: "1"
+    Vis/CorGuessWinSize: "40"
+    Odom/Strategy: "0"
+    Odom/GuessMotion: "true"
+    Odom/VisKeyFrameThr: "0.7"
+    OdomF2M/Force3DoF: "false"
+    OdomF2M/MaxSize: "1500"
+    OdomF2M/BundleAdjustment: "true"
+    RGBD/LinearUpdate: "0.15"
+    RGBD/AngularUpdate: "0.05"
+    RGBD/MaxDepth: "4.0"
+    RGBD/MinDepth: "0.3"
+    Grid/FromDepth: "true"
+    Grid/FromScan: "false"
+    Grid/CellSize: "0.1"
+    Grid/RangeMax: "4.0"
+    Grid/NormasSegmentation: "true"
+    Grid/MaxGroundAngle: "20.0"
+    Grid/MaxObstacleHeight: "2.0"
+    Grid/MaxGroundHeight: "0.5"
+    Mem/IncrementalMemory: "true"
+    Mem/STMSize: "50"
+    Mem/RehearsalSimilarity: "0.45"
+    database_path: "~/.pixiws/rtabmap.db"
+    delete_db_on_start: true

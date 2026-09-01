@@ -6,7 +6,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, SetEnvironmentVariable, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
-from launch_ros.actions import LoadComposableNodes, SetParameter
+from launch_ros.actions import LoadComposableNodes, SetParameter, Node
 from launch_ros.descriptions import ComposableNode, ParameterFile
 from nav2_common.launch import RewrittenYaml
 
@@ -37,6 +37,12 @@ def generate_launch_description():
         description='the name of conatiner that nodes will load in if use composition',
     )
 
+    declare_remap_file_cmd = DeclareLaunchArgument(
+        'remap_file',
+        default_value=os.path.join(package_dir, 'params', 'leo_nav_remaps.yaml'),
+        description='Full path to the ROS2 remap file to use for all launched nodes',
+    )
+
     
 
     # Create the launch description and populate
@@ -45,6 +51,7 @@ def generate_launch_description():
         declare_use_sim_time_cmd,
         declare_params_file_cmd,
         declare_container_name_cmd,
+        declare_remap_file_cmd,
         OpaqueFunction(function=launch_nodes),
     ])
 
@@ -88,6 +95,16 @@ def launch_nodes(context, *args, **kwargs):
     load_composable_nodes = GroupAction(
         actions=[
             SetParameter('use_sim_time', use_sim_time),
+            Node(
+                name=container_name,
+                package='rclcpp_components',
+                executable='component_container_isolated',
+                namespace=namespace,
+                parameters=[configured_params, {'autostart': True}],
+                arguments=['--ros-args', '--log-level', 'info'],
+                remappings=remappings,
+                output='screen',
+            ),
             LoadComposableNodes(
                 target_container=container_name_full,
                 composable_node_descriptions=[
